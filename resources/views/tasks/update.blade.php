@@ -2,6 +2,17 @@
 
 @section('content')
     <div class="container mx-auto p-4">
+    @if(session('success'))
+    <div class="bg-green-500 text-white p-2 mb-4">
+        {{ session('success') }}
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="bg-red-500 text-white p-2 mb-4">
+        {{ session('error') }}
+    </div>
+@endif
         <h2 class="text-2xl font-bold mb-4">Actualizar Estado de Tareas</h2>
         <table class="table-auto w-full border-collapse">
             <thead>
@@ -21,7 +32,7 @@
                         <td class="border px-4 py-2">{{ $task['description'] }}</td>
                         <td class="border px-4 py-2">{{ $task['status'] }}</td>
                         <td class="border px-4 py-2">
-                        <form action="http://api.uvgaimingshop.me/api/tasks/{{ $task['task_id'] }}" method="POST">
+                        <form action="{{ route('tasks.updateFromView', ['taskId' => $task['task_id']]) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <select name="status" class="border border-blue-600 rounded px-3 py-1">

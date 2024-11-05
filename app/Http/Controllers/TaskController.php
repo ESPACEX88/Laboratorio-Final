@@ -6,6 +6,7 @@ use Aws\DynamoDb\DynamoDbClient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class TaskController extends Controller
 {
@@ -89,6 +90,31 @@ class TaskController extends Controller
     
         return response()->json(['message' => 'Estado de la tarea actualizado correctamente'], 200);
     }
+
+
+
+    //FUNCION QUE GESTIONA UPDATE INTERFAZ
+    public function updateTaskStatusFromView(Request $request, $taskId)
+{
+    try {
+        // Envía la solicitud PUT a la API
+        $response = Http::put("http://api.uvgaimingshop.me/api/tasks/{$taskId}", [
+            'status' => $request->status,
+        ]);
+
+        // Verifica la respuesta de la API
+        if ($response->successful()) {
+            // Mensaje de éxito desde la API
+            return redirect()->back()->with('success', 'Estado de la tarea actualizado correctamente');
+        } else {
+            // Mensaje de error si algo falla en la API
+            return redirect()->back()->with('error', 'No se pudo actualizar el estado de la tarea');
+        }
+    } catch (\Exception $e) {
+        // Maneja errores de conexión o excepciones
+        return redirect()->back()->with('error', 'Error de conexión con la API');
+    }
+}
     
 
     // Eliminar tarea (DELETE)
@@ -148,6 +174,84 @@ class TaskController extends Controller
         return view('tasks.update', compact('tasks'));
     }
 
-    
+    public function showTasksDelete()
+    {
+        try {
+            // Realiza la petición GET a tu API
+            $response = Http::get('http://api.uvgaimingshop.me/api/tasks');
+            
+            // Verifica que la respuesta sea exitosa
+            if ($response->successful()) {
+                $tasks = $response->json(); // Obtiene el contenido de la respuesta en formato JSON
+            } else {
+                $tasks = [];
+                session()->flash('error', 'Error al obtener las tareas.');
+            }
+        } catch (\Exception $e) {
+            $tasks = [];
+            session()->flash('error', 'Error de conexión con la API: ' . $e->getMessage());
+        }
+
+        // Pasamos los datos a la vista
+        return view('tasks.delete', compact('tasks'));
+    }
+
+    public function deleteTaskFromView($task_id)
+    {
+        try {
+            // Envía la solicitud DELETE a la API
+            $response = Http::delete("http://api.uvgaimingshop.me/api/tasks/{$task_id}");
+
+            if ($response->successful()) {
+                return redirect()->back()->with('success', 'Tarea eliminada correctamente');
+            } else {
+                return redirect()->back()->with('error', 'No se pudo eliminar la tarea');
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error de conexión con la API');
+        }
+    }
+
+    public function createTaskFromView(Request $request)
+{
+    // Valida los datos del formulario
+    $request->validate([
+        'task_id' => 'required|string',
+        'title' => 'required|string',
+        'description' => 'required|string',
+        'status' => 'required|string',
+        'created_at' => 'required|date',
+    ]);
+
+    // Organiza los datos en un array
+    $taskData = [
+        'task_id' => $request->task_id,
+        'title' => $request->title,
+        'description' => $request->description,
+        'status' => $request->status,
+        'created_at' => $request->created_at,
+    ];
+
+    try {
+        // Envía la solicitud POST a la API
+        $response = Http::post('http://api.uvgaimingshop.me/api/tasks', $taskData);
+
+        // Log de la respuesta de la API
+        Log::info('Respuesta de la API:', ['status' => $response->status(), 'body' => $response->body()]);
+
+        // Verifica si la solicitud fue exitosa
+        if ($response->successful()) {
+            return redirect()->back()->with('success', 'Tarea creada exitosamente');
+        } else {
+            // Log para errores de respuesta de la API
+            Log::error('Error al crear la tarea en la API', ['response' => $response->json()]);
+            return redirect()->back()->with('error', 'No se pudo crear la tarea');
+        }
+    } catch (\Exception $e) {
+        // Manejo de errores de conexión o excepción general
+        Log::error('Error de conexión con la API', ['error' => $e->getMessage()]);
+        return redirect()->back()->with('error', 'Error de conexión con la API');
+    }
+}
     
 }

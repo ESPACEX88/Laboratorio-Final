@@ -26,6 +26,13 @@ Route::get('/tasks/update', [TaskController::class, 'showTasksUpdate'])->name('t
 
 Route::get('/tasks/delete', [TaskController::class, 'showTasksDelete'])->name('tasks.delete');
 
+Route::put('/tasks/update/{taskId}', [TaskController::class, 'updateTaskStatusFromView'])->name('tasks.updateFromView');
+
+Route::delete('/tasks/delete/{task_id}', [TaskController::class, 'deleteTaskFromView'])->name('tasks.deleteFromView');
+
+Route::post('/tasks/created', [TaskController::class, 'createTaskFromView'])->name('tasks.createFromView');
+
+
 
 
 
